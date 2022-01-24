@@ -1298,7 +1298,8 @@ export default abstract class BaseApiBuilder<T extends Noco>
       { name: '0009044', handler: this.ncUpManyToMany.bind(this) },
       { name: '0083006', handler: ncModelsOrderUpgrader },
       { name: '0083007', handler: ncParentModelTitleUpgrader },
-      { name: '0083008', handler: ncRemoveDuplicatedRelationRows }
+      { name: '0083008', handler: ncRemoveDuplicatedRelationRows },
+      { name: '0084002', handler: this.ncUpAddNestedResolverArgs.bind(this) }
     ];
     if (!(await this.xcMeta?.knex?.schema?.hasTable?.('nc_store'))) {
       return;
@@ -1718,9 +1719,10 @@ export default abstract class BaseApiBuilder<T extends Noco>
   // table alias functions
   protected getInflectedName(_name: string, inflectionFns: string): string {
     let name = _name;
-    if (process.env.NC_INFLECTION)
+    if (process.env.NC_INFLECTION) {
       inflectionFns = 'camelize';
-    
+    }
+
     if (inflectionFns && inflectionFns !== 'none') {
       name = inflectionFns
         .split(',')
@@ -2452,6 +2454,8 @@ export default abstract class BaseApiBuilder<T extends Noco>
     return metas;
   }
 
+  protected async ncUpAddNestedResolverArgs(_ctx: any): Promise<any> {}
+
   protected async ncUpManyToMany(_ctx: any): Promise<any> {
     const models = await this.xcMeta.metaList(
       this.projectId,
@@ -3177,6 +3181,10 @@ export default abstract class BaseApiBuilder<T extends Noco>
       virtualViewsParamsArr,
       virtualViews
     );
+    await this.metaQueryParamsUpdate(queryParams, tableName);
+  }
+
+  private async metaQueryParamsUpdate(queryParams: any, tableName: string) {
     await this.xcMeta.metaUpdate(
       this.projectId,
       this.dbAlias,
@@ -3233,6 +3241,7 @@ interface NcMetaData {
 
   [key: string]: any;
 }
+
 type XcTablesPopulateParams = {
   tableNames?: Array<{
     tn: string;
